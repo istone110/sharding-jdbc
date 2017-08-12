@@ -17,8 +17,8 @@
 
 package com.dangdang.ddframe.rdb.sharding.merger.util;
 
+import com.dangdang.ddframe.rdb.sharding.constant.OrderType;
 import com.dangdang.ddframe.rdb.sharding.exception.ShardingJdbcException;
-import com.dangdang.ddframe.rdb.sharding.parser.result.merger.OrderByColumn.OrderByType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -59,11 +59,13 @@ public final class ResultSetUtil {
             return value.toString();
         } else {
             return value;
-        }    
+        }
     }
     
     private static Object convertNullValue(final Class<?> convertType) {
         switch (convertType.getName()) {
+            case "boolean":
+                return false;
             case "byte":
                 return (byte) 0;
             case "short":
@@ -72,10 +74,10 @@ public final class ResultSetUtil {
                 return 0;
             case "long":
                 return 0L;
-            case "double":
-                return 0D;
             case "float":
                 return 0F;
+            case "double":
+                return 0D;
             default:
                 return null;
         }
@@ -122,15 +124,25 @@ public final class ResultSetUtil {
     }
     
     /**
-     * 根据排序类型比较大小.
+     * 比较大小.
      * 
-     * @param thisValue 待比较的值
+     * @param thisValue 当前值
      * @param otherValue 待比较的值
-     * @param orderByType 排序类型
-     * @return 负数，零和正数分别表示小于，等于和大于
+     * @param orderType 排序类型
+     * @param nullOrderType 空值排序类型
+     * @return 比较结果
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static int compareTo(final Comparable thisValue, final Comparable otherValue, final OrderByType orderByType) {
-        return OrderByType.ASC == orderByType ? thisValue.compareTo(otherValue) : -thisValue.compareTo(otherValue);
+    public static int compareTo(final Comparable thisValue, final Comparable otherValue, final OrderType orderType, final OrderType nullOrderType) {
+        if (null == thisValue && null == otherValue) {
+            return 0;
+        }
+        if (null == thisValue) {
+            return orderType == nullOrderType ? -1 : 1;
+        }
+        if (null == otherValue) {
+            return orderType == nullOrderType ? 1 : -1;
+        }
+        return OrderType.ASC == orderType ? thisValue.compareTo(otherValue) : -thisValue.compareTo(otherValue);
     }
 }
